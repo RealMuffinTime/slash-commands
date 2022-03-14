@@ -1,17 +1,12 @@
 import requests
-import secret_master
-import secret_dev
+import settings
 
-# Here you can set a id for a guild on which you test the bot, you can upload the commands to this specific guild
-guild_url = "https://discord.com/api/v8/applications/%s/guilds/<your_guild_id>/commands"
+version = "1.0.0"
+
+
+guild_url = f"https://discord.com/api/v8/applications/%s/guilds/{settings.guild_id}/commands"
 guilds_url = "https://discord.com/api/v8/applications/%s/commands"
 
-# Here in this list you can define the commands you want to upload/update
-command_list = [{"name": "a_command_name", "description": "a_command_description"},
-                {"name": "a_command_name", "description": "a_command_description"},
-                {"name": "a_command_name", "description": "a_command_description"},
-                {"name": "a_command_name", "description": "a_command_description"},
-                {"name": "a_command_name", "description": "a_command_description"}]
 
 temp_id = ""
 temp_token = ""
@@ -37,49 +32,53 @@ def request():
     global temp_token
     global temp_url
     global temp_id
-    
-    # For usage with a master and dev bot, you need to declare them in secret_master.py/secret_dev.py
-    print("\nWhich bot version? master/dev")
-    bot = input().upper()
 
-    if bot == "MASTER":
-        temp_token = secret_master.bot_token
-        temp_id = secret_master.bot_id
-    elif bot == "DEV":
-        temp_token = secret_dev.bot_token
-        temp_id = secret_dev.bot_id
+    # for usage with a master and dev bot, you need to declare them in settings.py
+    print("\nWhich bot version? master/dev")
+    bot = input().lower()
+
+    if bot == "master":
+        temp_token = settings.master_token
+        temp_id = settings.master_id
+    elif bot == "dev":
+        temp_token = settings.dev_token
+        temp_id = settings.dev_id
     else:
-        print("Incorrect token type")
+        print("Incorrect bot version type")
 
     # 'guild' updates for the specific guild, 'guilds' updates for all guilds
     print("\nWhich url? guild/guilds")
-    url = input().upper()
+    url = input().lower()
 
-    if url == "GUILD":
+    if url == "guild":
         temp_url = guild_url
-    elif url == "GUILDS":
+    elif url == "guilds":
         temp_url = guilds_url
     else:
-        print("Incorrect url type")
-    
-    print("\nWhich request type? post/get/delete")
-    request_type = input().upper()
+        print("Incorrect url type.")
 
-    if request_type == "POST":
-        for command in command_list:
+    print("\nWhich request? post/get/delete")
+    request_type = input().lower()
+
+    if request_type == "post":
+        for command in settings.command_list:
             print(post_request(temp_url % temp_id, temp_token, command).text)
-    elif request_type == "GET":
+    elif request_type == "get":
         print(get_request(temp_url % temp_id, temp_token).text)
-    elif request_type == "DELETE":
-        print("Which command id?")
-        print(delete_request((temp_url % temp_id) + "/" + input(), temp_token).text)
+    elif request_type == "delete":
+        print("You want do delete these commands? yes/no")
+        if input().lower() == "yes":
+            for command in settings.delete_list:
+                print(delete_request((temp_url % temp_id) + "/" + command, temp_token).text)
+        else:
+            print("Did not delete commands.")
     else:
-        print("Incorrect requests type")
+        print("Incorrect requests type.")
 
     print("\n --- \n")
-    print("Again? Y/N")
-    i = input().upper()
-    if i == "Y" or i == "YES":
+    print("Again? y/n")
+    i = input().lower()
+    if i == "y" or i == "yes":
         request()
 
 
