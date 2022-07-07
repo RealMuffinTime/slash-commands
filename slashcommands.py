@@ -66,7 +66,7 @@ def request():
     elif request_type == "get":
         print(get_request(temp_url % temp_id, temp_token).text)
     elif request_type == "delete":
-        print("You want do delete these commands? yes/no")
+        print("\nYou want do delete these commands? yes/no")
         if input().lower() == "yes":
             for command in settings.delete_list:
                 print(delete_request((temp_url % temp_id) + "/" + command, temp_token).text)
