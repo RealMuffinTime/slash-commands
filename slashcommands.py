@@ -1,6 +1,6 @@
+import importlib
 import requests
 import settings
-import importlib
 
 version = "1.0.0"
 
