@@ -1,84 +1,115 @@
 import requests
 import settings
+import importlib
 
 version = "1.0.0"
 
 
-guild_url = f"https://discord.com/api/v8/applications/%s/guilds/{settings.guild_id}/commands"
-guilds_url = "https://discord.com/api/v8/applications/%s/commands"
-
-
-temp_id = ""
-temp_token = ""
-temp_url = ""
-
-
 def post_request(url, token, json):
-    post = requests.post(url, headers={"Authorization": "Bot " + token}, json=json)
+    post = requests.post(url, headers={"Authorization": token}, json=json)
     return post
 
 
 def get_request(url, token):
-    get = requests.get(url, headers={"Authorization": "Bot " + token})
+    get = requests.get(url, headers={"Authorization": token})
     return get
 
 
 def delete_request(url, token):
-    delete = requests.delete(url, headers={"Authorization": "Bot " + token})
+    delete = requests.delete(url, headers={"Authorization": token})
     return delete
 
 
 def request():
-    global temp_token
-    global temp_url
-    global temp_id
+    print(f"Running script version {version}.\n")
 
-    # for usage with a master and dev bot, you need to declare them in settings.py
-    print("\nWhich bot version? master/dev")
-    bot = input().lower()
-
-    if bot == "master":
-        temp_token = settings.master_token
-        temp_id = settings.master_id
-    elif bot == "dev":
-        temp_token = settings.dev_token
-        temp_id = settings.dev_id
+    accounts = []
+    for account in range(len(settings.accounts)):
+        accounts.append(str(account))
+    # you need to declare accounts in settings.py
+    print(f"Which account? {'/'.join(accounts)}")
+    for account in accounts:
+        print(f"{account} - {settings.accounts[int(account)][0]}")
+    account = input().lower()
+    if account in accounts:
+        account = settings.accounts[int(account)]
+        print(f"Using account {account[0]}.\n")
     else:
-        print("Incorrect bot version type")
+        print("Invalid account selection. This request will not execute.\n")
 
     # 'guild' updates for the specific guild, 'guilds' updates for all guilds
-    print("\nWhich url? guild/guilds")
+    print("Use one guild or all guilds? guild/guilds")
     url = input().lower()
-
     if url == "guild":
-        temp_url = guild_url
+        guilds = []
+        for guild in range(len(settings.guilds)):
+            guilds.append(str(guild))
+        print(f"Using guild. Which guild do you want to use? {'/'.join(guilds)}")
+        for guild in guilds:
+            print(f"{guild} - {settings.guilds[int(guild)]}")
+        guild = input().lower()
+        if guild in guilds:
+            url = f"https://discord.com/api/v8/applications/{account[0]}/guilds/{settings.guilds[int(guild)]}/commands"
+            print(f"Using guild {settings.guilds[int(guild)]}.\n")
+        else:
+            print("Invalid guild selection. This request will not execute.\n")
     elif url == "guilds":
-        temp_url = guilds_url
+        url = f"https://discord.com/api/v8/applications/{account[0]}/commands"
+        print("Using all guilds.\n")
     else:
-        print("Incorrect url type.")
+        print("Invalid answer. This request will not execute.\n")
 
-    print("\nWhich request? post/get/delete")
+    # select which action you want to do
+    print("Which type of request? post/get/delete")
     request_type = input().lower()
 
-    if request_type == "post":
-        for command in settings.command_list:
-            print(post_request(temp_url % temp_id, temp_token, command).text)
-    elif request_type == "get":
-        print(get_request(temp_url % temp_id, temp_token).text)
-    elif request_type == "delete":
-        print("\nYou want do delete these commands? yes/no")
-        if input().lower() == "yes":
-            for command in settings.delete_list:
-                print(delete_request((temp_url % temp_id) + "/" + command, temp_token).text)
+    if request_type == "post" or request_type == "p":
+        print("Do you really want to post these commands? yes/no")
+        for command in settings.post_list:
+            print(command)
+        post = input().lower()
+        if post == "y" or post == "yes":
+            for command in settings.post_list:
+                try:
+                    response = post_request(url, account[1], command).text
+                    print(f"Posted {command}." + response)
+                except:
+                    print(f"Failed posting {command}.")
+            print()
         else:
-            print("Did not delete commands.")
-    else:
-        print("Incorrect requests type.")
+            print("Did not post commands. This request will not execute.\n")
 
-    print("\n --- \n")
-    print("Again? y/n")
-    i = input().lower()
-    if i == "y" or i == "yes":
+    elif request_type == "get" or request_type == "g":
+        try:
+            response = get_request(url, account[1]).text.strip("\n")
+            print(f"Successfully retrieved information: {response}\n")
+        except:
+            print(f"Failed retrieving information.\n")
+
+    elif request_type == "delete" or request_type == "d":
+        print("Do you really want to delete these commands? yes/no")
+        for command in settings.delete_list:
+            print(command)
+        delete = input().lower()
+        if delete == "y" or delete == "yes":
+            for command in settings.delete_list:
+                try:
+                    response = delete_request(url + "/" + command, account[1]).text
+                    print(f"Successfully posted {command}." + response)
+                except:
+                    print(f"Failed deleting {command}.")
+            print()
+        else:
+            print("Did not delete commands. This request will not execute.\n")
+
+    else:
+        print("Invalid requests type. This request will not execute.\n")
+
+    print("\nExecute script again? yes/no")
+    script = input().lower()
+    if script == "y" or script == "yes":
+        importlib.reload(settings)
+        print("Reloaded settings file.")
         request()
 
 
