@@ -13,5 +13,5 @@ post_list = [
     {"name": "<command name 2>", "description": "<command description 2>", "type": 1}  # command 2 or more
 ]
 
-# Here you can specify ids you got from get commands to delete commands
+# Here you can specify ids you got from get requests to delete commands
 delete_list = ["<commandid>"]
