@@ -1,6 +1,8 @@
 import importlib
 import requests
+import math
 import settings
+import time
 
 version = "1.1.0"
 
@@ -44,7 +46,7 @@ def request():
         guilds = []
         for guild in range(len(settings.guilds)):
             guilds.append(str(guild))
-        print(f"Using guild. Which guild do you want to use? {'/'.join(guilds)}")
+        print(f"Using guild.\n\nWhich guild do you want to use? {'/'.join(guilds)}")
         for guild in guilds:
             print(f"{guild} - {settings.guilds[int(guild)]}")
         guild = input().lower()
@@ -71,8 +73,13 @@ def request():
         if post == "y" or post == "yes":
             for command in settings.post_list:
                 try:
-                    response = post_request(url, account[1], command).text
-                    print(f"Posted {command}." + response)
+                    response = post_request(url, account[1], command).json()
+                    if response.get("retry_after") is not None:
+                        timeout = math.ceil(float(response["retry_after"]))
+                        print(f"Awaiting ratelimit of {timeout}s.")
+                        time.sleep(timeout)
+                        response = post_request(url, account[1], command).json()
+                    print(f"Posted {command}.", response)
                 except:
                     print(f"Failed posting {command}.")
             print()
@@ -82,7 +89,7 @@ def request():
     elif request_type == "get" or request_type == "g":
         try:
             response = get_request(url, account[1]).text.strip("\n")
-            print(f"Successfully retrieved information: {response}\n")
+            print(f"Retrieved information: {response}\n")
         except:
             print(f"Failed retrieving information.\n")
 
@@ -94,8 +101,13 @@ def request():
         if delete == "y" or delete == "yes":
             for command in settings.delete_list:
                 try:
-                    response = delete_request(url + "/" + command, account[1]).text
-                    print(f"Successfully posted {command}." + response)
+                    response = delete_request(url + "/" + command, account[1]).json()
+                    if response.get("retry_after") is not None:
+                        timeout = math.ceil(float(response["retry_after"]))
+                        print(f"Awaiting ratelimit of {timeout}s.")
+                        time.sleep(timeout)
+                        response = delete_request(url + "/" + command, account[1]).json()
+                    print(f"Deleted {command}.", response)
                 except:
                     print(f"Failed deleting {command}.")
             print()
