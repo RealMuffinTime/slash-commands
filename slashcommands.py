@@ -4,7 +4,7 @@ import math
 import settings
 import time
 
-version = "1.1.0"
+version = "v1.1.0"
 
 
 def post_request(url, token, json):
